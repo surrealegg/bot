@@ -28,12 +28,6 @@ def log(message: str, type: str = "INFO") -> None:
         f.write(result + '\n')
 
 
-def add_message(id: int, message: str) -> None:
-    cur.execute(
-        'INSERT INTO messages (user_id, message) VALUES (?, ?);', (id, message))
-    con.commit()
-
-
 def toggle_permission(id: int) -> bool:
     cur.execute(
         "SELECT user_id, permission FROM permission WHERE user_id = (?);", (id,))
