@@ -77,7 +77,7 @@ async def on_message(message: Message) -> None:
                 f'New message added user_id: {message.author.id}, message: "{parsed_content}"')
 
 
-@bot.command()
+@bot.command(brief="Gives permission to store messages to be able to simulate the user.")
 async def permission(ctx: Context) -> None:
     result = toggle_permission(ctx.author.id)
     if result:
@@ -88,15 +88,15 @@ async def permission(ctx: Context) -> None:
         log(f'User {ctx.author.id} removed permission to store data.')
 
 
-@bot.command()
-async def purge(ctx: Context) -> None:
+@bot.command(brief="Removes all user's messages from the database.")
+async def clear(ctx: Context) -> None:
     cur.execute("DELETE FROM messages where user_id = (?);", (ctx.author.id,))
     con.commit()
-    await ctx.reply('All your messages have been purged from our database.')
+    await ctx.reply('All your messages have been deleted from the database.')
     log(f'User {ctx.author.id} requested to remove all their data.')
 
 
-@bot.command()
+@bot.command(brief="Simulates current user.")
 async def simulate(ctx: Context, id: typing.Optional[int] = None) -> None:
     target_id = ctx.author.id if id is None else id
     cur.execute("SELECT message FROM messages WHERE user_id = (?);",
@@ -105,6 +105,7 @@ async def simulate(ctx: Context, id: typing.Optional[int] = None) -> None:
 
     if len(data) < MIN_MESSAGES:
         await ctx.reply(f'I don\'t have enough data to simulate this user. I need at least {MIN_MESSAGES} messages.')
+        log(f'User {ctx.author.id} requested a simulation, but it has not enough data to do so.', 'ERROR')
         return
 
     text = ""
