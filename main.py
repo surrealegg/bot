@@ -65,15 +65,16 @@ async def on_message(message: Message) -> None:
         "SELECT permission FROM permission WHERE user_id = (?)", (message.author.id,))
     data = cur.fetchone()
     if data is not None and data[0] != 0:
+        parsed_content = emoji.demojize(message.content)
         cur.execute(
             "SELECT rowid FROM messages WHERE user_id = (?) AND message = (?);", (message.content, message.author.id))
         data = cur.fetchone()
         if data is None:
             cur.execute("INSERT INTO messages (user_id, message) VALUES (?, ?);",
-                        (message.author.id, message.content))
+                        (message.author.id, parsed_content))
             con.commit()
             log(
-                f'New message added user_id: {message.author.id}, message: "{message.content}"')
+                f'New message added user_id: {message.author.id}, message: "{parsed_content}"')
 
 
 @bot.command()
@@ -109,7 +110,7 @@ async def simulate(ctx: Context, id: typing.Optional[int] = None) -> None:
     text = ""
     for row in data:
         text += row[0] + '\n'
-    model = markovify.NewlineText(emoji.demojize(text))
+    model = markovify.NewlineText(text)
     result = model.make_sentence(tries=TRIES)
     log(f'User {ctx.author.id} requested a simulation got "{result}".')
     await ctx.reply("Unable to make a sentence." if result is None else result)
@@ -118,6 +119,9 @@ async def simulate(ctx: Context, id: typing.Optional[int] = None) -> None:
 def main() -> None:
     load_dotenv()
 
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS messages (
             user_id UNSIGNED LONG INTEGER NOT NULL,
@@ -125,6 +129,7 @@ def main() -> None:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
     ''')
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS permission  (
             user_id UNSIGNED LONG INTEGER NOT NULL,
