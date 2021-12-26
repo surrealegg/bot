@@ -1,1 +1,4 @@
 .env
+database.db
+*.log
+logs/
