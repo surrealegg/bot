@@ -67,7 +67,7 @@ async def on_message(message: Message) -> None:
     if data is not None and data[0] != 0:
         parsed_content = emoji.demojize(message.content)
         cur.execute(
-            "SELECT rowid FROM messages WHERE user_id = (?) AND message = (?);", (message.content, message.author.id))
+            "SELECT rowid FROM messages WHERE user_id = (?) AND message = (?);", (parsed_content, message.author.id))
         data = cur.fetchone()
         if data is None:
             cur.execute("INSERT INTO messages (user_id, message) VALUES (?, ?);",
